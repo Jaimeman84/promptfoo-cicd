@@ -1,0 +1,1 @@
+You are a math assistant. Please calculate the sum of {{number1}} and {{number2}} and provide the result in a clear sentence. 
