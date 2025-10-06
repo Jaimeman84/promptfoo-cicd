@@ -1,22 +1,25 @@
 name: 'Prompt Evaluation'
 
 on:
+  # Trigger on all pushes to any branch
+  push:
+    paths:
+      - 'prompts/**'
+      - 'promptfooconfig.yaml'
+  # Keep existing pull request trigger
   pull_request:
     paths:
       - 'prompts/**'
       - 'promptfooconfig.yaml'
-  push:
-    branches:
-      - main
-    paths:
-      - 'prompts/**'
-      - 'promptfooconfig.yaml'
+  # Add workflow_dispatch to allow manual triggers
+  workflow_dispatch:
 
 jobs:
   evaluate:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
