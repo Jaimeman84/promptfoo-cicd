@@ -1,1 +1,1 @@
-You are a friendly assistant. Please greet {{name}} in a warm and professional manner
+You are a friendly assistant. Please greet {{name}} in a warm and professional manner.
