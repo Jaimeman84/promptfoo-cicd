@@ -1,18 +1,16 @@
 name: 'Prompt Evaluation'
 on:
-  workflow_dispatch:  # Allow manual triggers for testing
   pull_request:
     paths:
       - 'prompts/**'
       - 'promptfooconfig.yaml'
-      - '.github/workflows/*.yml'  # Trigger on workflow changes
   push:
     branches:
       - main
     paths:
       - 'prompts/**'
       - 'promptfooconfig.yaml'
-      - '.github/workflows/*.yml'  # Trigger on workflow changes
+  workflow_dispatch:
 
 jobs:
   evaluate:
@@ -23,34 +21,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Updated to Node 20 (18 will be deprecated soon)
-          cache: 'npm'  # Cache npm dependencies
-      
+          node-version: '18'
+          # Remove the cache option that's causing the error
+          # cache: 'npm'
+
       - name: Set up promptfoo cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/promptfoo
-          key: ${{ runner.os }}-promptfoo-${{ hashFiles('promptfooconfig.yaml') }}  # Better cache key
+          key: ${{ runner.os }}-promptfoo-v1
           restore-keys: |
             ${{ runner.os }}-promptfoo-
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      # Add validation step before running evaluations
-      - name: Validate secrets
-        run: |
-          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
-            echo "::error::OPENAI_API_KEY secret is not set"
-            echo "Please add it in Settings → Secrets and variables → Actions"
-            exit 1
-          fi
-          echo "✅ Required secrets are available"
-      
+
+      - name: Install promptfoo
+        run: npm install -g promptfoo
+
       - name: Run promptfoo evaluation (PR)
         if: github.event_name == 'pull_request'
         uses: promptfoo/promptfoo-action@v1
@@ -60,37 +49,28 @@ jobs:
           prompts: 'prompts/**/*.txt'
           config: 'promptfooconfig.yaml'
           cache-path: ~/.cache/promptfoo
-      
+
       - name: Run promptfoo evaluation (Push to main)
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          # Validate environment variable is set
-          if [ -z "$OPENAI_API_KEY" ]; then
-            echo "::error::OPENAI_API_KEY environment variable is not set"
-            exit 1
-          fi
-          
-          echo "Running promptfoo evaluation..."
-          npx promptfoo eval -c promptfooconfig.yaml --verbose
-          
-          echo "✅ Evaluation completed for commit ${{ github.sha }}"
-      
-      # Generate shareable report
+          promptfoo eval -c promptfooconfig.yaml
+          echo "Evaluation completed for commit ${{ github.sha }}"
+
       - name: Generate HTML report
-        if: github.event_name == 'push' && always()  # Run even if eval fails
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: |
-          npx promptfoo view --output-path ./promptfoo-report.html || true
-      
+          promptfoo view --output-path ./promptfoo-report.html || true
+
       - name: Upload evaluation results
-        if: github.event_name == 'push' && always()  # Upload even on failure
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: promptfoo-results-${{ github.sha }}  # Unique name per commit
+          name: promptfoo-results-${{ github.sha }}
           path: |
             ~/.promptfoo/output/
             ./promptfoo-report.html
             ./promptfoo-results.json
           retention-days: 30
-          if-no-files-found: warn  # Don't fail if files aren't found
+          if-no-files-found: warn
