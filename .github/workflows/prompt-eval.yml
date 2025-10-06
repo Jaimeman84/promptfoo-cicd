@@ -1,15 +1,18 @@
 name: 'Prompt Evaluation'
 on:
+  workflow_dispatch:  # Allow manual triggers for testing
   pull_request:
     paths:
       - 'prompts/**'
       - 'promptfooconfig.yaml'
+      - '.github/workflows/*.yml'  # Trigger on workflow changes
   push:
     branches:
       - main
     paths:
       - 'prompts/**'
       - 'promptfooconfig.yaml'
+      - '.github/workflows/*.yml'  # Trigger on workflow changes
 
 jobs:
   evaluate:
