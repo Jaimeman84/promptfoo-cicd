@@ -1,23 +1,12 @@
 prompts:
-  - prompts/greeting.txt
   - prompts/math.txt
 
 providers:
-  - openai:gpt-3.5-turbo
+  - openai:gpt-4o-mini
   - openai:gpt-4o
+  - anthropic:claude-3-5-sonnet-latest
 
 tests:
-  - description: "Test basic greeting response"
-    vars:
-      name: "John"
-    assert:
-      - type: "contains"
-        value: "Hello"
-      - type: "contains"
-        value: "John"
-      - type: "not-contains"
-        value: "error"
-
   - description: "Test basic math calculation"
     vars:
       number1: 5
