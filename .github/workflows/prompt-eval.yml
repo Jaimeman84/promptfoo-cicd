@@ -60,13 +60,16 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          promptfoo eval -c promptfooconfig.yaml
+          # Create output directory
+          mkdir -p promptfoo-results
+          # Run evaluation with explicit output path
+          promptfoo eval -c promptfooconfig.yaml -o promptfoo-results/results.json
           echo "Evaluation completed for commit ${{ github.sha }}"
 
       - name: Generate HTML report
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: |
-          promptfoo view --output-path ./promptfoo-report.html || true
+          promptfoo view -i promptfoo-results/results.json --output-path promptfoo-results/report.html || true
 
       - name: Upload evaluation results
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -74,8 +77,6 @@ jobs:
         with:
           name: promptfoo-results-${{ github.sha }}
           path: |
-            ~/.promptfoo/output/
-            ./promptfoo-report.html
-            ./promptfoo-results.json
+            promptfoo-results/
           retention-days: 30
           if-no-files-found: warn
