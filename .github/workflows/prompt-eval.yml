@@ -71,8 +71,6 @@ jobs:
         run: |
           # Create output directory
           mkdir -p promptfoo-results
-          # First update promptfoo to latest version
-          npm install -g promptfoo@latest
           # Generate HTML report directly with eval command
           promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html
 
