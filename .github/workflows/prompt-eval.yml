@@ -11,6 +11,7 @@ on:
     paths:
       - 'prompts/**'
       - 'promptfooconfig.yaml'
+      - '.github/workflows/*.yml'
   workflow_dispatch:
 
 jobs:
