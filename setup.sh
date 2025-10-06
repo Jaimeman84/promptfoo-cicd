@@ -3,11 +3,9 @@
 # Create output directory
 mkdir -p ./promptfoo-results
 
-# Install promptfoo if not already installed
-if ! command -v promptfoo &> /dev/null; then
-    echo "Installing promptfoo..."
-    npm install -g promptfoo
-fi
+# Install dependencies
+echo "Installing dependencies..."
+npm install
 
 # Check for OPENAI_API_KEY
 if [ -z "$OPENAI_API_KEY" ]; then
@@ -18,4 +16,4 @@ fi
 
 # Run evaluation
 echo "Running promptfoo evaluation..."
-promptfoo eval --config promptfooconfig.yaml 
+npx promptfoo eval --config promptfooconfig.yaml 

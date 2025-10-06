@@ -11,28 +11,46 @@ This repository contains a simple promptfoo testing framework integrated with Gi
 │       └── prompt-eval.yml    # GitHub Actions workflow
 ├── prompts/
 │   ├── greeting.txt           # Greeting prompt template
-│   └── math.txt              # Math calculation prompt template
+│   └── math.txt               # Math calculation prompt template
 ├── promptfooconfig.yaml       # Promptfoo configuration
-└── README.md                 # This file
+├── package.json               # Node.js dependencies
+├── setup.sh                   # Unix/Linux/Mac setup script
+├── setup.bat                  # Windows setup script
+└── README.md                  # This file
 ```
 
-## Setup
+## GitHub Setup
 
-1. Clone this repository
-2. Set up the following GitHub repository secrets:
-   - `OPENAI_API_KEY`: Your OpenAI API key
+1. Create a new GitHub repository (can be public or private)
+2. Push your code to the repository:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin <your-github-repo-url>
+   git branch -M main
+   git push -u origin main
+   ```
+3. Set up the required GitHub repository secret:
+   - Go to your repository → Settings → Secrets and variables → Actions
+   - Add a new repository secret:
+     - Name: `OPENAI_API_KEY`
+     - Value: Your OpenAI API key from https://platform.openai.com/api-keys
 
 ## How it Works
 
 The framework automatically evaluates prompts when:
 - A pull request modifies files in the `prompts/` directory or the `promptfooconfig.yaml` file
-- Changes are pushed to the main branch
+- Changes are pushed to any branch (including main)
+- Manually triggered via GitHub Actions interface
 
 The evaluation:
 - Tests prompt responses against predefined assertions
 - Uses GPT-3.5-turbo as the default model
 - Caches results to optimize API usage
 - Posts results as comments on pull requests
+- Generates HTML reports for push events
+- Uploads evaluation results as artifacts
 
 ## Test Cases
 
@@ -77,7 +95,7 @@ export OPENAI_API_KEY='your-api-key'
 
 The script will:
 - Create necessary directories
-- Install promptfoo if not already installed
+- Install dependencies from package.json
 - Verify your API key is set
 - Run the evaluation
 
@@ -86,15 +104,15 @@ Alternatively, you can run the steps manually:
 Windows (Command Prompt):
 ```cmd
 mkdir promptfoo-results
-npm install -g promptfoo
-promptfoo eval --config promptfooconfig.yaml
+npm install
+npx promptfoo eval --config promptfooconfig.yaml
 ```
 
 Unix/Linux/Mac:
 ```bash
 mkdir -p ./promptfoo-results
-npm install -g promptfoo
-promptfoo eval --config promptfooconfig.yaml
+npm install
+npx promptfoo eval --config promptfooconfig.yaml
 ```
 
 The results will be saved in the `promptfoo-results` directory in both JSON and CSV formats.
@@ -105,4 +123,34 @@ The results will be saved in the `promptfoo-results` directory in both JSON and 
 2. Make your changes
 3. Create a pull request
 4. Wait for the automated evaluation results
-5. Address any failing assertions 
+5. Address any failing assertions
+
+## Security Considerations
+
+This repository can be either public or private:
+
+1. **Public Repository**
+   - GitHub secrets are encrypted and secure even in public repositories
+   - Secrets are never exposed in logs or to unauthorized users
+   - Pull requests from forks cannot access secrets by default
+   - Free for unlimited contributors
+   - Easy to share and collaborate
+
+2. **Private Repository**
+   - Same security for secrets as public repositories
+   - May have limitations based on your GitHub plan
+   - More restrictive for open source collaboration
+
+## Troubleshooting
+
+1. **Missing Dependencies Lock File**
+   - If you see an error about missing lock file, run `npm install` locally first
+   - This will generate the package-lock.json file needed by GitHub Actions
+
+2. **API Key Issues**
+   - Ensure your OPENAI_API_KEY is correctly set in GitHub repository secrets
+   - For local testing, verify the environment variable is set correctly
+
+3. **Output Directory Errors**
+   - The setup scripts create the necessary output directories
+   - If running manually, ensure you create the promptfoo-results directory 

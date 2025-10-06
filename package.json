@@ -1,0 +1,22 @@
+{
+  "name": "promptfoo-cicd",
+  "version": "1.0.0",
+  "description": "Promptfoo CI/CD testing framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "promptfoo eval",
+    "eval": "promptfoo eval"
+  },
+  "dependencies": {
+    "promptfoo": "^0.30.0"
+  },
+  "keywords": [
+    "promptfoo",
+    "llm",
+    "testing",
+    "ci",
+    "cd"
+  ],
+  "author": "",
+  "license": "MIT"
+}
