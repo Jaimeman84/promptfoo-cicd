@@ -69,10 +69,7 @@ jobs:
       - name: Generate HTML report
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: |
-          # Create output directory
-          mkdir -p promptfoo-results
-          # Generate HTML report directly with eval command
-          promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html
+          promptfoo view -i promptfoo-results/results.json --output-path promptfoo-results/report.html || true
 
       - name: Upload evaluation results
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
