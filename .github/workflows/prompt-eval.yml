@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,8 +47,20 @@ jobs:
           config: 'promptfooconfig.yaml'
           cache-path: ~/.cache/promptfoo
       
-      - name: Run promptfoo evaluation (Push)
+      - name: Run promptfoo evaluation (Push to main)
         if: github.event_name == 'push'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: promptfoo eval -c promptfooconfig.yaml
+        run: |
+          promptfoo eval -c promptfooconfig.yaml
+          echo "Evaluation completed for commit ${{ github.sha }}"
+      
+      - name: Upload evaluation results
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: promptfoo-results
+          path: |
+            ~/.promptfoo/output/**
+            promptfoo-results.json
+          retention-days: 30
