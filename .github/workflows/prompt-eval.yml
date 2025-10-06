@@ -69,7 +69,10 @@ jobs:
       - name: Generate HTML report
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: |
-          promptfoo view -i promptfoo-results/results.json --output-path promptfoo-results/report.html || true
+          # First update promptfoo to latest version
+          npm install -g promptfoo@latest
+          # Generate HTML report without -i flag
+          promptfoo view --output-path promptfoo-results/report.html || true
 
       - name: Upload evaluation results
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
