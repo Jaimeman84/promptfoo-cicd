@@ -53,8 +53,8 @@ jobs:
           prompts: 'prompts/**/*.txt'
           config: 'promptfooconfig.yaml'
           cache-path: ~/.cache/promptfoo
-
-      - name: Run promptfoo evaluation (Push to main)
+ 
+      - name: Generate HTML report
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -62,15 +62,9 @@ jobs:
         run: |
           # Create output directory
           mkdir -p promptfoo-results
-          # Run evaluation with explicit output path
-          promptfoo eval -c promptfooconfig.yaml -o promptfoo-results/results.json
-          echo "Evaluation completed for commit ${{ github.sha }}"
-
-      - name: Generate HTML report
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        run: |
-          promptfoo view -i promptfoo-results/results.json --output-path promptfoo-results/report.html || true
-
+          # Generate HTML report directly with eval command
+          promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html
+ 
       - name: Upload evaluation results
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
