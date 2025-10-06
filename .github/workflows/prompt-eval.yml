@@ -38,8 +38,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-promptfoo-
       
-      - name: Install promptfoo
-        run: npm install -g promptfoo
+      - name: Install dependencies
+        run: npm ci
       
       # Add validation step before running evaluations
       - name: Validate secrets
@@ -73,7 +73,7 @@ jobs:
           fi
           
           echo "Running promptfoo evaluation..."
-          promptfoo eval -c promptfooconfig.yaml --verbose
+          npx promptfoo eval -c promptfooconfig.yaml --verbose
           
           echo "✅ Evaluation completed for commit ${{ github.sha }}"
       
@@ -81,7 +81,7 @@ jobs:
       - name: Generate HTML report
         if: github.event_name == 'push' && always()  # Run even if eval fails
         run: |
-          promptfoo view --output-path ./promptfoo-report.html || true
+          npx promptfoo view --output-path ./promptfoo-report.html || true
       
       - name: Upload evaluation results
         if: github.event_name == 'push' && always()  # Upload even on failure

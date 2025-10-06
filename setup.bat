@@ -3,12 +3,9 @@
 REM Create output directory
 mkdir "promptfoo-results" 2>nul
 
-REM Check if promptfoo is installed
-where promptfoo >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo Installing promptfoo...
-    npm install -g promptfoo
-)
+REM Install dependencies
+echo Installing dependencies...
+npm install
 
 REM Check for OPENAI_API_KEY
 if "%OPENAI_API_KEY%"=="" (
@@ -19,4 +16,4 @@ if "%OPENAI_API_KEY%"=="" (
 
 REM Run evaluation
 echo Running promptfoo evaluation...
-promptfoo eval --config promptfooconfig.yaml 
+npx promptfoo eval --config promptfooconfig.yaml 
