@@ -62,8 +62,22 @@ jobs:
         run: |
           # Create output directory
           mkdir -p promptfoo-results
-          # Generate HTML report directly with eval command
-          promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html
+          mkdir -p results
+          
+          # Debug info
+          echo "Checking API keys (masked for security)"
+          echo "OPENAI_API_KEY set: ${{ secrets.OPENAI_API_KEY != '' }}"
+          echo "ANTHROPIC_API_KEY set: ${{ secrets.ANTHROPIC_API_KEY != '' }}"
+          
+          # Show promptfoo version
+          promptfoo --version
+          
+          # Generate HTML report with verbose output
+          promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html --verbose || {
+            echo "Promptfoo evaluation failed. Checking config..."
+            cat promptfooconfig.yaml | grep -v "key\|secret\|token"
+            exit 1
+          }
  
       - name: Upload evaluation results
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'

@@ -21,4 +21,4 @@ output:
   - json
   - csv
 
-outputPath: ./results/promptfoo-results.html 
+outputPath: ./promptfoo-results 
