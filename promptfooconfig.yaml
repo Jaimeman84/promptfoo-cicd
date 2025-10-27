@@ -20,5 +20,6 @@ tests:
 output:
   - json
   - csv
+  - html
 
-outputPath: ./promptfoo-results 
+outputPath: ./promptfoo-results/results.html 
