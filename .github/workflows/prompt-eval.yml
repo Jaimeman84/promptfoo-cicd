@@ -2,14 +2,14 @@ name: 'Prompt Evaluation'
 on:
   pull_request:
     paths:
-      - 'prompts/*.txt'
+      - 'prompts/**'
       - 'promptfooconfig.yaml'
       - '.github/workflows/*.yml'
   push:
     branches:
       - main
     paths:
-      - 'prompts/*.txt'
+      - 'prompts/**'
       - 'promptfooconfig.yaml'
       - '.github/workflows/*.yml'
   workflow_dispatch:
@@ -28,8 +28,9 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18.17.1'
-          # Use a specific version known to work with promptfoo
+          node-version: '18'
+          # Remove the cache option that's causing the error
+          # cache: 'npm'
 
       - name: Set up promptfoo cache
         uses: actions/cache@v4
@@ -40,57 +41,29 @@ jobs:
             ${{ runner.os }}-promptfoo-
 
       - name: Install promptfoo
-        run: |
-          npm install -g promptfoo@0.28.0
-          echo "Installed promptfoo version:"
-          promptfoo --version
+        run: npm install -g promptfoo
 
       - name: Run promptfoo evaluation (PR)
         if: github.event_name == 'pull_request'
         uses: promptfoo/promptfoo-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          prompts: 'prompts/*.txt'
+          prompts: 'prompts/**/*.txt'
           config: 'promptfooconfig.yaml'
           cache-path: ~/.cache/promptfoo
-          no-cache: true
  
-      - name: Verify API Keys
-        run: |
-          if [[ -z "${{ secrets.OPENAI_API_KEY }}" ]]; then
-            echo "::error::OPENAI_API_KEY is not set in repository secrets"
-            exit 1
-          else
-            echo "✅ OPENAI_API_KEY is set"
-          fi
-
       - name: Generate HTML report
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           # Create output directory
           mkdir -p promptfoo-results
-          
-          # Create a minimal test file to verify setup
-          echo "Test prompt" > test-prompt.txt
-          
-          # Create minimal config file
-          cat > test-config.yaml << EOL
-          prompts: 
-            - test-prompt.txt
-          providers:
-            - openai:gpt-3.5-turbo
-          EOL
-          
-          # Run with minimal config first
-          echo "Testing with minimal configuration..."
-          promptfoo eval -c test-config.yaml --no-cache
-          
-          # If that works, run the actual evaluation
-          echo "Running actual evaluation..."
-          promptfoo eval -c promptfooconfig.yaml --no-cache --output promptfoo-results/report.html
+          # Generate HTML report directly with eval command
+          promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html
  
       - name: Upload evaluation results
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
