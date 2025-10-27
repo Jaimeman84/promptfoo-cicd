@@ -56,6 +56,22 @@ jobs:
           config: 'promptfooconfig.yaml'
           cache-path: ~/.cache/promptfoo
  
+      - name: Validate API Keys
+        run: |
+          # Check if API keys are properly set
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "::error::OPENAI_API_KEY is not set in repository secrets"
+            echo "Please add it in Settings → Secrets and variables → Actions → Repository secrets"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "::warning::ANTHROPIC_API_KEY is not set in repository secrets"
+            echo "This is required for Claude models. If you're using Claude models, please add it."
+          fi
+          
+          echo "✅ API keys validation passed"
+      
       - name: Generate HTML report
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
@@ -67,17 +83,31 @@ jobs:
           mkdir -p results
           
           # Debug info
-          echo "Checking API keys (masked for security)"
-          echo "OPENAI_API_KEY set: ${{ secrets.OPENAI_API_KEY != '' }}"
-          echo "ANTHROPIC_API_KEY set: ${{ secrets.ANTHROPIC_API_KEY != '' }}"
+          echo "Using Node.js $(node --version)"
+          echo "Using NPM $(npm --version)"
+          echo "Using promptfoo $(promptfoo --version)"
           
-          # Show promptfoo version
-          promptfoo --version
+          # Test API key validity (without revealing the key)
+          echo "Testing OpenAI API key validity..."
+          curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $OPENAI_API_KEY" https://api.openai.com/v1/models
           
-          # Generate HTML report with verbose output
+          # Try with a simpler configuration first
+          echo "Creating minimal test config..."
+          cat > test-config.yaml << EOL
+          prompts:
+            - "Say hello world"
+          providers:
+            - openai:gpt-3.5-turbo
+          EOL
+          
+          echo "Running test evaluation with minimal config..."
+          promptfoo eval -c test-config.yaml --verbose
+          
+          echo "Running actual evaluation..."
           promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html --verbose || {
-            echo "Promptfoo evaluation failed. Checking config..."
-            cat promptfooconfig.yaml | grep -v "key\|secret\|token"
+            echo "Promptfoo evaluation failed with exit code $?"
+            echo "This is likely an API key issue. Error code 100 indicates authentication problems."
+            echo "Please verify your API keys are correct and have sufficient permissions/credits."
             exit 1
           }
  
