@@ -28,9 +28,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          # Remove the cache option that's causing the error
-          # cache: 'npm'
+          node-version: '18'
 
       - name: Set up promptfoo cache
         uses: actions/cache@v4
@@ -48,22 +46,30 @@ jobs:
         uses: promptfoo/promptfoo-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           prompts: 'prompts/*.txt'
           config: 'promptfooconfig.yaml'
           cache-path: ~/.cache/promptfoo
+          no-cache: true
  
+      - name: Verify API Keys
+        run: |
+          if [[ -z "${{ secrets.OPENAI_API_KEY }}" ]]; then
+            echo "::error::OPENAI_API_KEY is not set in repository secrets"
+            exit 1
+          else
+            echo "✅ OPENAI_API_KEY is set"
+          fi
+
       - name: Generate HTML report
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           # Create output directory
           mkdir -p promptfoo-results
-          # Generate HTML report directly with eval command
-          promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html
+          # Generate HTML report with simpler options
+          promptfoo eval -c promptfooconfig.yaml --no-cache --output promptfoo-results/report.html
  
       - name: Upload evaluation results
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
