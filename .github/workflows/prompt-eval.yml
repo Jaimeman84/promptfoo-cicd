@@ -28,8 +28,9 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          # Using a newer Node.js version for better compatibility
+          node-version: '18'
+          # Remove the cache option that's causing the error
+          # cache: 'npm'
 
       - name: Set up promptfoo cache
         uses: actions/cache@v4
@@ -40,10 +41,7 @@ jobs:
             ${{ runner.os }}-promptfoo-
 
       - name: Install promptfoo
-        run: |
-          npm install -g promptfoo@latest
-          echo "Installed promptfoo version:"
-          promptfoo --version
+        run: npm install -g promptfoo
 
       - name: Run promptfoo evaluation (PR)
         if: github.event_name == 'pull_request'
@@ -56,22 +54,6 @@ jobs:
           config: 'promptfooconfig.yaml'
           cache-path: ~/.cache/promptfoo
  
-      - name: Validate API Keys
-        run: |
-          # Check if API keys are properly set
-          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
-            echo "::error::OPENAI_API_KEY is not set in repository secrets"
-            echo "Please add it in Settings → Secrets and variables → Actions → Repository secrets"
-            exit 1
-          fi
-          
-          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
-            echo "::warning::ANTHROPIC_API_KEY is not set in repository secrets"
-            echo "This is required for Claude models. If you're using Claude models, please add it."
-          fi
-          
-          echo "✅ API keys validation passed"
-      
       - name: Generate HTML report
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
@@ -80,36 +62,8 @@ jobs:
         run: |
           # Create output directory
           mkdir -p promptfoo-results
-          mkdir -p results
-          
-          # Debug info
-          echo "Using Node.js $(node --version)"
-          echo "Using NPM $(npm --version)"
-          echo "Using promptfoo $(promptfoo --version)"
-          
-          # Test API key validity (without revealing the key)
-          echo "Testing OpenAI API key validity..."
-          curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $OPENAI_API_KEY" https://api.openai.com/v1/models
-          
-          # Try with a simpler configuration first
-          echo "Creating minimal test config..."
-          cat > test-config.yaml << EOL
-          prompts:
-            - "Say hello world"
-          providers:
-            - openai:gpt-3.5-turbo
-          EOL
-          
-          echo "Running test evaluation with minimal config..."
-          promptfoo eval -c test-config.yaml --verbose
-          
-          echo "Running actual evaluation..."
-          promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html --verbose || {
-            echo "Promptfoo evaluation failed with exit code $?"
-            echo "This is likely an API key issue. Error code 100 indicates authentication problems."
-            echo "Please verify your API keys are correct and have sufficient permissions/credits."
-            exit 1
-          }
+          # Generate HTML report directly with eval command
+          promptfoo eval -c promptfooconfig.yaml --output promptfoo-results/report.html
  
       - name: Upload evaluation results
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
